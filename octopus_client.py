@@ -2,6 +2,9 @@ import requests
 
 
 class OctopusClient(object):
+    """
+    Taken from https://gist.github.com/codeinthehole/5f274f46b5798f435e6984397f1abb64
+    """
     BASE_URL = "https://api.octopus.energy/v1"
 
     class DataUnavailable(Exception):
