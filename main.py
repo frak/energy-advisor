@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict
 
+from jinja2 import Environment, FileSystemLoader
 from mastodon import Mastodon
 
 from octopus_client import OctopusClient
@@ -9,15 +10,18 @@ from octopus_client import OctopusClient
 # Octopus
 OCTOPUS_TOKEN = os.getenv("OCTOPUS_TOKEN", None)
 MPAN = os.getenv("MPAN", None)
-octo_client = OctopusClient(OCTOPUS_TOKEN)
 
 # Mastodon
 MASTO_TOKEN = os.getenv("MASTO_TOKEN", None)
 BOT_HOME = os.getenv("BOT_HOME", "https://botsin.space")
-masto_client = Mastodon(access_token=MASTO_TOKEN, api_base_url=BOT_HOME)
+SEND_TOOT_TO = os.getenv("SEND_TOOT_TO")
 
 # Debug
 SEND_TOOTS = os.getenv("SEND_TOOTS", "no")
+
+
+octo_client = OctopusClient(OCTOPUS_TOKEN)
+masto_client = Mastodon(access_token=MASTO_TOKEN, api_base_url=BOT_HOME)
 
 
 def get_gsp() -> str:
@@ -55,11 +59,16 @@ def get_cheapest_windows(prices: List[dict]) -> dict:
 
 
 def send_toot(start_at: datetime, data: Dict):
-    text = (
-        f"@frak@mastodon.org.uk For {start_at.strftime('%A %-d %B')} you should charge the batteries starting from "
-        f"{data['cheapest_group'].strftime('%H:%M%p')}. The cheapest slot is at "
-        f"{data['cheapest_slot'].strftime('%H:%M%p')} and costs {data['slot_price']} pence per kWh."
-    )
+    environment = Environment(loader=FileSystemLoader("templates/"))
+    template = environment.get_template("message.txt.tmpl")
+    data = {
+        "username": SEND_TOOT_TO,
+        "date": start_at.strftime('%A %-d %B'),
+        "start_time": data['cheapest_group'].strftime('%H:%M%p'),
+        "cheapest_slot": data['cheapest_slot'].strftime('%H:%M%p'),
+        "cheapest_price": data['slot_price']
+    }
+    text = template.render(data)
     if SEND_TOOTS == "yes":
         masto_client.toot(text)
     else:
@@ -67,13 +76,15 @@ def send_toot(start_at: datetime, data: Dict):
 
 
 if __name__ == "__main__":
-    if OCTOPUS_TOKEN is None or MPAN is None or MASTO_TOKEN is None:
-        print(f"Required env vars are missing, please check: {OCTOPUS_TOKEN=}, {MPAN=}, {MASTO_TOKEN=}")
+    if OCTOPUS_TOKEN is None or MPAN is None or MASTO_TOKEN is None or SEND_TOOT_TO is None:
+        print(
+            f"Required env vars are missing, please check: {OCTOPUS_TOKEN=}, {MPAN=}, {MASTO_TOKEN=}, {SEND_TOOT_TO=}"
+        )
         exit(1)
 
     gsp = get_gsp()
     start = datetime.now(tz=timezone.utc).replace(hour=0, minute=0, second=0) + timedelta(days=1)
     end = datetime.now(tz=timezone.utc).replace(hour=2, minute=0, second=0) + timedelta(days=3)
-    prices = get_daily_prices(gsp, start, end)
-    windows = get_cheapest_windows(prices)
+    day_prices = get_daily_prices(gsp, start, end)
+    windows = get_cheapest_windows(day_prices)
     send_toot(start, windows)

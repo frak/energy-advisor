@@ -14,6 +14,7 @@ Find the values for the required environment variables:
 - `MASTO_TOKEN` - your Mastodon client access token. Follow [the official documentation](https://docs.joinmastodon.org/client/token/) for help setting that up. 
 - `BOT_HOME` - the base URL for the Mastodon account that will be posting. This defaults to https://botsin.space.
 - `SEND_TOOTS` - in order for your toots to be sent this **MUST** be set to `yes`. This is to avoid sending toots when debugging.
+- `SEND_TOOT_TO` - who you want to receive the toot.
 
 Next create a crontab entry to schedule the running of the script, this also sets the required environment variables 
 that the script needs:
@@ -23,7 +24,12 @@ MPAN=0123456789
 MASTO_TOKEN=masto-access-token
 BOT_HOME=https://botsin.space
 SEND_TOOTS=yes
+SEND_TOOT_TO=@recipient@host.com
 0 20 * * * /usr/bin/python /path/to/repo/main.py 2>&1
 ```
 
 Profit!
+
+## Customisation
+
+The template for the message is stored in `templates/message.txt.tmpl` and can be customised as you see fit.
