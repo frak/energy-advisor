@@ -28,8 +28,8 @@ def get_gsp() -> str:
     return octo_client.electricity_meter_point(MPAN)["gsp"][1:]
 
 
-def get_daily_prices(gsp: str, start_at: datetime, end_at: datetime):
-    res = octo_client.agile_tariff_unit_rates(gsp, period_from=start_at, period_to=end_at)["results"]
+def get_daily_prices(gsp: str, start_at: datetime):
+    res = octo_client.agile_tariff_unit_rates(gsp, period_from=start_at)["results"]
     out = sorted(res, key=lambda item: item["valid_from"])
     return out
 
@@ -84,7 +84,6 @@ if __name__ == "__main__":
 
     gsp = get_gsp()
     start = datetime.now(tz=timezone.utc).replace(hour=0, minute=0, second=0) + timedelta(days=1)
-    end = datetime.now(tz=timezone.utc).replace(hour=2, minute=0, second=0) + timedelta(days=3)
-    day_prices = get_daily_prices(gsp, start, end)
+    day_prices = get_daily_prices(gsp, start)
     windows = get_cheapest_windows(day_prices)
     send_toot(start, windows)
