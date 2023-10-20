@@ -59,7 +59,7 @@ def get_cheapest_windows(prices: List[dict]) -> dict:
 
 
 def send_toot(start_at: datetime, data: Dict):
-    environment = Environment(loader=FileSystemLoader("templates/"))
+    environment = Environment(loader=FileSystemLoader(f"{os.path.dirname(os.path.realpath(__file__))}/templates/"))
     template = environment.get_template("message.txt.tmpl")
     data = {
         "username": SEND_TOOT_TO,
