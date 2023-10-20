@@ -1,7 +1,10 @@
 # Energy Watcher
 
-A simple python script that fetches tomorrow's price data from the Octopus Agile
+A python script that fetches tomorrow's price data from the Octopus Agile
 tariff and looks for the cheapest 90-minute window for charging a battery.
+
+It can also track the solar forecast for your installation and give you a
+summary of the data for the last 24 hours.
 
 ## Installation
 
@@ -26,6 +29,25 @@ BOT_HOME=https://botsin.space
 SEND_TOOTS=yes
 SEND_TOOT_TO=@recipient@host.com
 0 20 * * * /usr/bin/python /path/to/repo/main.py 2>&1
+```
+
+### Optional solar forecast reporting
+
+You need to locate the values for the following environment variables: `LAT`, `LNG`, `DEC`, `AZ`, `KWP`. These values 
+and how to determine them are amply described on the [Forecast.Solar](https://doc.forecast.solar/api:estimate) web-site.
+The API updates every 15 minutes, so there is no point in querying more frequently than that, but you can definitely
+pick larger intervals if it suits you.
+
+__NOTE:__ This functionality uses the public Forecast.Solar API and will count against your quota if you use Home Assistant
+or some other service that uses this API.
+
+```cronexp
+LAT=your-lat
+LNG=your-lng
+DEC=your-declination
+AZ=your-azimuth
+KWP=your-kwp
+*/15 * * * * /usr/bin/python /path/to/repo/collector.py 2>&1
 ```
 
 Profit!

@@ -8,11 +8,11 @@ from mastodon import Mastodon
 from octopus_client import OctopusClient
 
 # Octopus
-OCTOPUS_TOKEN = os.getenv("OCTOPUS_TOKEN", None)
-MPAN = os.getenv("MPAN", None)
+OCTOPUS_TOKEN = os.getenv("OCTOPUS_TOKEN")
+MPAN = os.getenv("MPAN")
 
 # Mastodon
-MASTO_TOKEN = os.getenv("MASTO_TOKEN", None)
+MASTO_TOKEN = os.getenv("MASTO_TOKEN")
 BOT_HOME = os.getenv("BOT_HOME", "https://botsin.space")
 SEND_TOOT_TO = os.getenv("SEND_TOOT_TO")
 
@@ -35,10 +35,7 @@ def get_daily_prices(gsp: str, start_at: datetime):
 
 
 def get_cheapest_windows(prices: List[dict]) -> dict:
-    single_price = 99999
-    single_start = None
-    group_price = 99999
-    group_start = None
+    single_price, single_start, group_price, group_start = 99, None, 99, None
     for index, price in enumerate(prices):
         if price["value_inc_vat"] < single_price:
             single_price = price["value_inc_vat"]
