@@ -1,11 +1,13 @@
 import os
-from datetime import datetime, timedelta, timezone
-from typing import List, Dict
+from datetime import datetime, timezone, timedelta
+from typing import Dict, Any, Union
 
 from jinja2 import Environment, FileSystemLoader
 from mastodon import Mastodon
 
 from octopus_client import OctopusClient
+from octopus_provider import OctopusProvider
+from solar_provider import SolarProvider
 
 # Octopus
 OCTOPUS_TOKEN = os.getenv("OCTOPUS_TOKEN")
@@ -20,52 +22,25 @@ SEND_TOOT_TO = os.getenv("SEND_TOOT_TO")
 SEND_TOOTS = os.getenv("SEND_TOOTS", "no")
 
 
-octo_client = OctopusClient(OCTOPUS_TOKEN)
-masto_client = Mastodon(access_token=MASTO_TOKEN, api_base_url=BOT_HOME)
-
-
-def get_gsp() -> str:
-    return octo_client.electricity_meter_point(MPAN)["gsp"][1:]
-
-
-def get_daily_prices(gsp: str, start_at: datetime):
-    res = octo_client.agile_tariff_unit_rates(gsp, period_from=start_at)["results"]
-    out = sorted(res, key=lambda item: item["valid_from"])
-    return out
-
-
-def get_cheapest_windows(prices: List[dict]) -> dict:
-    single_price, single_start, group_price, group_start = 99, None, 99, None
-    for index, price in enumerate(prices):
-        if price["value_inc_vat"] < single_price:
-            single_price = price["value_inc_vat"]
-            single_start = datetime.strptime(price["valid_from"], "%Y-%m-%dT%H:%M:%SZ")
-        try:
-            this_group_price = price["value_inc_vat"] + prices[index + 1]["value_inc_vat"] + \
-                               prices[index + 2]["value_inc_vat"]
-            if this_group_price < group_price:
-                group_price = this_group_price
-                group_start = datetime.strptime(price["valid_from"], "%Y-%m-%dT%H:%M:%SZ")
-        except IndexError:
-            pass
-    return {
-        "cheapest_slot": single_start,
-        "slot_price": single_price,
-        "cheapest_group": group_start,
-    }
-
-
-def send_toot(start_at: datetime, data: Dict):
+def send_toot(octo_data: Dict[str, Any], solar_data: Dict[str, Union[int, float]]):
+    masto_client = Mastodon(access_token=MASTO_TOKEN, api_base_url=BOT_HOME)
     environment = Environment(loader=FileSystemLoader(f"{os.path.dirname(os.path.realpath(__file__))}/templates/"))
     template = environment.get_template("message.txt.tmpl")
-    data = {
+    template_data = {
         "username": SEND_TOOT_TO,
-        "date": start_at.strftime('%A %-d %B'),
-        "start_time": data['cheapest_group'].strftime('%H:%M%p'),
-        "cheapest_slot": data['cheapest_slot'].strftime('%H:%M%p'),
-        "cheapest_price": data['slot_price']
+        "date": octo_data["run_for"].strftime('%A %-d %B'),
+        "start_time": octo_data['cheapest_group'].strftime('%H:%M%p'),
+        "cheapest_slot": octo_data['cheapest_slot'].strftime('%H:%M%p'),
+        "cheapest_price": octo_data['slot_price'],
+        "has_solar": False,
     }
-    text = template.render(data)
+    if solar_data:
+        template_data["has_solar"] = True
+        template_data["mean_forecast"] = f"{round(solar_data['mean'] / 1000, 1)}kWh"
+        template_data["max_forecast"] = f"{round(solar_data['max'] / 1000, 1)}kWh"
+        template_data["min_forecast"] = f"{round(solar_data['min'] / 1000, 1)}kWh"
+        template_data["data_points"] = solar_data['count']
+    text = template.render(template_data)
     if SEND_TOOTS == "yes":
         masto_client.toot(text)
     else:
@@ -78,9 +53,11 @@ if __name__ == "__main__":
             f"Required env vars are missing, please check: {OCTOPUS_TOKEN=}, {MPAN=}, {MASTO_TOKEN=}, {SEND_TOOT_TO=}"
         )
         exit(1)
-
-    gsp = get_gsp()
     start = datetime.now(tz=timezone.utc).replace(hour=0, minute=0, second=0) + timedelta(days=1)
-    day_prices = get_daily_prices(gsp, start)
-    windows = get_cheapest_windows(day_prices)
-    send_toot(start, windows)
+    octopus = OctopusProvider(OctopusClient(OCTOPUS_TOKEN))
+    solar = SolarProvider()
+    send_toot(
+        octopus.get_price_windows(MPAN, start),
+        solar.get_mean_and_range_for_date(start.strftime("%Y-%m-%d"))
+    )
+
