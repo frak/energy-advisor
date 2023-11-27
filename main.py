@@ -26,9 +26,10 @@ def send_toot(octo_data: Dict[str, Any], solar_data: Dict[str, Union[int, float]
     masto_client = Mastodon(access_token=MASTO_TOKEN, api_base_url=BOT_HOME)
     environment = Environment(loader=FileSystemLoader(f"{os.path.dirname(os.path.realpath(__file__))}/templates/"))
     template = environment.get_template("message.txt.tmpl")
+    tomorrow = octo_data["run_for"] + timedelta(days=1)
     template_data = {
         "username": SEND_TOOT_TO,
-        "date": octo_data["run_for"].strftime('%A %-d %B'),
+        "date": octo_data["run_for"].strftime('%-d') + "-" + tomorrow.strftime('%-d %B'),
         "start_time": octo_data['cheapest_group'].strftime('%H:%M%p'),
         "cheapest_slot": octo_data['cheapest_slot'].strftime('%H:%M%p'),
         "cheapest_price": octo_data['slot_price'],
@@ -53,7 +54,7 @@ if __name__ == "__main__":
             f"Required env vars are missing, please check: {OCTOPUS_TOKEN=}, {MPAN=}, {MASTO_TOKEN=}, {SEND_TOOT_TO=}"
         )
         exit(1)
-    start = datetime.now(tz=timezone.utc).replace(hour=0, minute=0, second=0) + timedelta(days=1)
+    start = datetime.now(tz=timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(hours=23)
     octopus = OctopusProvider(OctopusClient(OCTOPUS_TOKEN))
     solar = SolarProvider()
     send_toot(
