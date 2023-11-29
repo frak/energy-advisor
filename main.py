@@ -55,10 +55,12 @@ if __name__ == "__main__":
         )
         exit(1)
     start = datetime.now(tz=timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(hours=23)
+    solar_start = datetime.now(tz=timezone.utc).replace(hour=0, minute=0, second=0) + timedelta(days=1)
+
     octopus = OctopusProvider(OctopusClient(OCTOPUS_TOKEN))
     solar = SolarProvider()
     send_toot(
         octopus.get_price_windows(MPAN, start),
-        solar.get_mean_and_range_for_date(start.strftime("%Y-%m-%d"))
+        solar.get_mean_and_range_for_date(solar_start.strftime("%Y-%m-%d"))
     )
 
