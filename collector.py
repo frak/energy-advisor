@@ -12,11 +12,15 @@ DEC = os.getenv("DEC")
 AZ = os.getenv("AZ")
 KWP = os.getenv("KWP")
 
-REQUEST_URL = "https://api.forecast.solar/estimate/watthours/day/{lat}/{lng}/{dec}/{az}/{kwp}"
+REQUEST_URL = (
+    "https://api.forecast.solar/estimate/watthours/day/{lat}/{lng}/{dec}/{az}/{kwp}"
+)
 DATA_FILE = f"{os.path.dirname(os.path.realpath(__file__))}/data/forecasts.json"
 
 
-def store_forecasts(lat: str, lng: str, declination: str, azimuth: str, kwp: str) -> None:
+def store_forecasts(
+    lat: str, lng: str, declination: str, azimuth: str, kwp: str
+) -> None:
     url = REQUEST_URL.format(lat=lat, lng=lng, dec=declination, az=azimuth, kwp=kwp)
     result = get_data(url)["result"]
     forecasts = get_forecasts()
@@ -52,7 +56,7 @@ def prune_old_values(forecasts: Dict[str, List[int]]):
 
 def write_forecasts(forecasts: Dict[str, List[int]]):
     with open(DATA_FILE, "wb") as file:
-        file.write(json.dumps(forecasts, indent=2).encode('utf8'))
+        file.write(json.dumps(forecasts, indent=2).encode("utf8"))
 
 
 def get_data(url) -> Dict:
@@ -61,6 +65,8 @@ def get_data(url) -> Dict:
 
 if __name__ == "__main__":
     if LAT is None or LNG is None or DEC is None or AZ is None or KWP is None:
-        print(f"Required env vars are missing, please check: {LAT=}, {LNG=}, {DEC=}, {AZ=}, {KWP=}")
+        print(
+            f"Required env vars are missing, please check: {LAT=}, {LNG=}, {DEC=}, {AZ=}, {KWP=}"
+        )
         exit(1)
     store_forecasts(LAT, LNG, DEC, AZ, KWP)

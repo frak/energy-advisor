@@ -21,13 +21,20 @@ class OctopusProvider:
         for index, price in enumerate(prices):
             if price["value_inc_vat"] < single_price:
                 single_price = price["value_inc_vat"]
-                single_start = datetime.strptime(price["valid_from"], "%Y-%m-%dT%H:%M:%SZ")
+                single_start = datetime.strptime(
+                    price["valid_from"], "%Y-%m-%dT%H:%M:%SZ"
+                )
             try:
-                this_group_price = price["value_inc_vat"] + prices[index + 1]["value_inc_vat"] + \
-                                   prices[index + 2]["value_inc_vat"]
+                this_group_price = (
+                    price["value_inc_vat"]
+                    + prices[index + 1]["value_inc_vat"]
+                    + prices[index + 2]["value_inc_vat"]
+                )
                 if this_group_price < group_price:
                     group_price = this_group_price
-                    group_start = datetime.strptime(price["valid_from"], "%Y-%m-%dT%H:%M:%SZ")
+                    group_start = datetime.strptime(
+                        price["valid_from"], "%Y-%m-%dT%H:%M:%SZ"
+                    )
             except IndexError:
                 pass
         return {
@@ -40,7 +47,9 @@ class OctopusProvider:
         gsp = self._get_gsp(mpan)
         day_prices = self._get_daily_prices(gsp, start)
         if not day_prices:
-            raise RuntimeError("No prices returned, are you running this script before 4pm?")
+            raise RuntimeError(
+                "No prices returned, are you running this script before 4pm?"
+            )
         out = self._calculate_windows(day_prices)
         out["run_for"] = start
         return out

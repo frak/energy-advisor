@@ -26,4 +26,3 @@ class SolarProvider:
             "max": max(values),
             "count": len(values),
         }
-
