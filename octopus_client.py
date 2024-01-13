@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Any, Dict, List
+
 import requests
 
 
@@ -13,9 +16,11 @@ class OctopusClient(object):
         Catch-all exception indicating we can't get data back from the API
         """
 
-    def __init__(self, api_key):
+    def __init__(self, api_key: str, mpan: str):
         self.api_key = api_key
+        self.mpan = mpan
         self.session = requests.Session()
+        self.daily_prices = []
 
     def _get(self, path, params=None):
         """
@@ -38,9 +43,9 @@ class OctopusClient(object):
 
         return response.json()
 
-    def electricity_meter_point(self, mpan):
+    def electricity_meter_point(self):
         # See https://developer.octopus.energy/docs/api/#electricity-meter-points
-        return self._get("/electricity-meter-points/%s/" % mpan)
+        return self._get("/electricity-meter-points/%s/" % self.mpan)
 
     def electricity_tariff_unit_rates(
         self, product_code, tariff_code, period_from=None, period_to=None
@@ -117,3 +122,17 @@ class OctopusClient(object):
             "/gas-meter-points/%s/meters/%s/consumption/" % (mprn, serial_number),
             params=params,
         )
+
+    def _get_gsp(self) -> str:
+        return self.electricity_meter_point()["gsp"][1:]
+
+    def get_daily_prices(self, start_at: datetime) -> List[Dict[str, Any]]:
+        if len(self.daily_prices) == 0:
+            res = self.agile_tariff_unit_rates(self._get_gsp(), period_from=start_at)["results"]
+            if not res:
+                raise RuntimeError(
+                    "No prices returned, are you running this script before 4pm?"
+                )
+            self.daily_prices = sorted(res, key=lambda item: item["valid_from"])
+        return self.daily_prices
+
