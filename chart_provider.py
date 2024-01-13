@@ -26,7 +26,7 @@ class ChartProvider:
                 (0.1, "orange"), (0.8, "orange"),
                 (0.8, "crimson"), (1, "crimson")
             ],
-            width=600, height=400,
+            width=1024, height=768,
         )
         fig.update_layout(
             coloraxis_showscale=False,
