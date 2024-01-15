@@ -22,9 +22,10 @@ class ChartProvider:
             df, y="value_inc_vat", x="valid_from",
             color="value_inc_vat",
             color_continuous_scale=[
-                (0, "chartreuse"), (0.1, "chartreuse"),
+                (0, "chartreuse"), (0.05, "chartreuse"),
+                (0.05, "seagreen"), (0.1, "seagreen"),
                 (0.1, "orange"), (0.8, "orange"),
-                (0.8, "crimson"), (1, "crimson")
+                (0.8, "crimson"), (1, "crimson"),
             ],
             width=1024, height=768,
         )
