@@ -1,9 +1,10 @@
 import os
+import time
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, Union
 
 from jinja2 import Environment, FileSystemLoader
-from mastodon import Mastodon
+from mastodon import Mastodon, MastodonNetworkError
 
 from chart_provider import ChartProvider
 from octopus_client import OctopusClient
@@ -69,9 +70,20 @@ if __name__ == "__main__":
     octopus = DailyPriceProvider(octo_client)
     charts = ChartProvider(octo_client)
     solar = SolarProvider()
-    send_toot(
-        octopus.get_price_windows(start),
-        solar.get_mean_and_range_for_date(solar_start.strftime("%Y-%m-%d")),
-        charts.make_chart(start),
-    )
+    retry_count = 0
+    sent = False
+    while retry_count < 10:
+        try:
+            send_toot(
+                octopus.get_price_windows(start),
+                solar.get_mean_and_range_for_date(solar_start.strftime("%Y-%m-%d")),
+                charts.make_chart(start),
+            )
+            sent = True
+            break
+        except MastodonNetworkError as e:
+            time.sleep(120)
+            retry_count += 1
     charts.delete_chart()
+    if not sent:
+        print("Unable to send message, Mastodon is down!")
