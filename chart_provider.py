@@ -5,6 +5,8 @@ import pandas as pa
 import plotly.express as px
 from uuid import uuid4
 
+from pytz import timezone
+
 from octopus_client import OctopusClient
 
 
@@ -17,6 +19,9 @@ class ChartProvider:
 
     def make_chart(self, start: datetime) -> str:
         data = self._client.get_daily_prices(start)
+        for item in data:
+            valid_from = datetime.strptime(item["valid_from"], "%Y-%m-%dT%H:%M:%S%z")
+            item["valid_from"] = valid_from.astimezone(timezone("Europe/London")).strftime("%Y-%m-%dT%H:%M:%S%z")
         df = pa.DataFrame(data)
         fig = px.bar(
             df, y="value_inc_vat", x="valid_from",
@@ -42,4 +47,5 @@ class ChartProvider:
         return self._filename
 
     def delete_chart(self) -> None:
-        os.remove(self._filename)
+        if self._filename:
+            os.remove(self._filename)

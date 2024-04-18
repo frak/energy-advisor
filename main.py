@@ -13,7 +13,7 @@ from solar_provider import SolarProvider
 
 # Octopus
 OCTOPUS_TOKEN = os.getenv("OCTOPUS_TOKEN")
-MPAN = os.getenv("MPAN")
+ACCOUNT_NUMBER = os.getenv("ACCOUNT_NUMBER")
 
 # Mastodon
 MASTO_TOKEN = os.getenv("MASTO_TOKEN")
@@ -25,8 +25,6 @@ SEND_TOOTS = os.getenv("SEND_TOOTS", "no")
 
 
 def send_toot(octo_data: Dict[str, Any], solar_data: Dict[str, Union[int, float]], chart_filename: str):
-    masto_client = Mastodon(access_token=MASTO_TOKEN, api_base_url=BOT_HOME)
-    masto_image = masto_client.media_post(chart_filename, synchronous=True)
     environment = Environment(
         loader=FileSystemLoader(
             f"{os.path.dirname(os.path.realpath(__file__))}/templates/"
@@ -52,21 +50,24 @@ def send_toot(octo_data: Dict[str, Any], solar_data: Dict[str, Union[int, float]
         template_data["data_points"] = solar_data["count"]
     text = template.render(template_data)
     if SEND_TOOTS == "yes":
+        masto_client = Mastodon(access_token=MASTO_TOKEN, api_base_url=BOT_HOME)
+        masto_image = masto_client.media_post(chart_filename, synchronous=True)
         masto_client.status_post(text, media_ids=[masto_image])
     else:
-        print(f"Message to send: {text}")
+        print(f"DRY RUN: {text}")
 
 
 if __name__ == "__main__":
-    if OCTOPUS_TOKEN is None or MPAN is None or MASTO_TOKEN is None or SEND_TOOT_TO is None:
+    if OCTOPUS_TOKEN is None or ACCOUNT_NUMBER is None or MASTO_TOKEN is None or SEND_TOOT_TO is None:
         print(
-            f"Required env vars are missing, please check: {OCTOPUS_TOKEN=}, {MPAN=}, {MASTO_TOKEN=}, {SEND_TOOT_TO=}"
+            f"Required env vars are missing, please check: {OCTOPUS_TOKEN=}, {ACCOUNT_NUMBER=}, {MASTO_TOKEN=}"
+            f", {SEND_TOOT_TO=}"
         )
         exit(1)
     start = datetime.now(tz=timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(hours=23)
     solar_start = datetime.now(tz=timezone.utc).replace(hour=0, minute=0, second=0) + timedelta(days=1)
 
-    octo_client = OctopusClient(OCTOPUS_TOKEN, MPAN)
+    octo_client = OctopusClient(OCTOPUS_TOKEN, ACCOUNT_NUMBER)
     octopus = DailyPriceProvider(octo_client)
     charts = ChartProvider(octo_client)
     solar = SolarProvider()
@@ -84,6 +85,7 @@ if __name__ == "__main__":
         except MastodonNetworkError as e:
             time.sleep(120)
             retry_count += 1
-    charts.delete_chart()
+        finally:
+            charts.delete_chart()
     if not sent:
         print("Unable to send message, Mastodon is down!")
