@@ -13,7 +13,7 @@ Clone this repo onto your system and install the requirements with `pip install 
 Find the values for the required environment variables:
 
 - `OCTOPUS_TOKEN` - this is your Octopus API token, found on the [Octopus Developer Dashboard](https://octopus.energy/dashboard/new/accounts/personal-details/api-access).
-- `MPAN` - your electricity meterpoint MPAN, also found on the [Octopus Developer Dashboard](https://octopus.energy/dashboard/new/accounts/personal-details/api-access).
+- `ACCOUNT_NUMBER` - your electricity meterpoint MPAN, also found on the [Octopus Developer Dashboard](https://octopus.energy/dashboard/new/accounts/personal-details/api-access).
 - `MASTO_TOKEN` - your Mastodon client access token. Follow [the official documentation](https://docs.joinmastodon.org/client/token/) for help setting that up. 
 - `BOT_HOME` - the base URL for the Mastodon account that will be posting. This defaults to https://botsin.space.
 - `SEND_TOOTS` - in order for your toots to be sent this **MUST** be set to `yes`. This is to avoid sending toots when debugging.
@@ -23,7 +23,7 @@ Next create a crontab entry to schedule the running of the script, this also set
 that the script needs:
 ```cronexp
 OCTOPUS_TOKEN=api-token
-MPAN=0123456789
+ACCOUNT_NUMBER=octopus-account-number
 MASTO_TOKEN=masto-access-token
 BOT_HOME=https://botsin.space
 SEND_TOOTS=yes

@@ -34,9 +34,6 @@ def send_toot(octo_data: Dict[str, Any], solar_data: Dict[str, Union[int, float]
     tomorrow = octo_data["run_for"] + timedelta(days=1)
     template_data = {
         "username": SEND_TOOT_TO,
-        "date": octo_data["run_for"].strftime("%-d")
-        + "-"
-        + tomorrow.strftime("%-d %B"),
         "start_time": octo_data["cheapest_group"].strftime("%H:%M%p"),
         "cheapest_slot": octo_data["cheapest_slot"].strftime("%H:%M%p"),
         "cheapest_price": octo_data["slot_price"],
