@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, Union
 
 from jinja2 import Environment, FileSystemLoader
-from mastodon import Mastodon, MastodonNetworkError
+from mastodon import Mastodon, MastodonNetworkError, MastodonServiceUnavailableError
 
 from chart_provider import ChartProvider
 from octopus_client import OctopusClient
@@ -79,7 +79,7 @@ if __name__ == "__main__":
             )
             sent = True
             break
-        except MastodonNetworkError as e:
+        except (MastodonNetworkError, MastodonServiceUnavailableError) as e:
             time.sleep(120)
             retry_count += 1
         finally:
