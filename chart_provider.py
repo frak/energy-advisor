@@ -26,7 +26,7 @@ class ChartProvider:
         fig = px.bar(
             df, y="value_inc_vat", x="valid_from",
             color="value_inc_vat",
-            color_continuous_scale='rdylgn_r',
+            color_continuous_scale='sunsetdark',
             width=1024, height=768,
         )
         fig.update_layout(
