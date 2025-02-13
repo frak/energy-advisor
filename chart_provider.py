@@ -34,6 +34,7 @@ class ChartProvider:
             yaxis=None,
             xaxis=None,
             margin={'l': 3, 'r': 3, 't': 3, 'b': 3},
+            plot_bgcolor='#999',
         )
         fig.update_xaxes(showgrid=False, ticklabelmode="period", dtick=self.TWO_HOURS)
         fig.update_yaxes(showgrid=False)
