@@ -17,7 +17,7 @@ ACCOUNT_NUMBER = os.getenv("ACCOUNT_NUMBER")
 
 # Mastodon
 MASTO_TOKEN = os.getenv("MASTO_TOKEN")
-BOT_HOME = os.getenv("BOT_HOME", "https://botsin.space")
+BOT_HOME = os.getenv("BOT_HOME", "https://mastodon.social")
 SEND_TOOT_TO = os.getenv("SEND_TOOT_TO")
 
 # Debug
@@ -82,7 +82,6 @@ if __name__ == "__main__":
         except (MastodonNetworkError, MastodonServiceUnavailableError) as e:
             time.sleep(120)
             retry_count += 1
-        finally:
-            charts.delete_chart()
     if not sent:
         print("Unable to send message, Mastodon is down!")
+    charts.delete_chart()
