@@ -1,0 +1,10 @@
+# Energy Advisor schedule (run by supercronic inside the container).
+# Times are interpreted in the container's TZ (set via compose).
+#
+#  min  hour  dom  mon  dow   command
+
+# Collect the solar forecast every 15 minutes.
+*/15   *     *    *    *     python /app/collector.py
+
+# Post the daily energy summary at 20:04.
+4      20    *    *    *     python /app/main.py

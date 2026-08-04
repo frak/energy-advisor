@@ -1,0 +1,18 @@
+services:
+  energy-advisor:
+    build: .
+    image: energy-advisor
+    container_name: energy-advisor
+    restart: unless-stopped
+    # Cron fires in this timezone. The scripts compute price windows in UTC
+    # internally, so this only controls WHEN the 20:04 job runs.
+    environment:
+      TZ: Europe/London
+    env_file:
+      - .env
+    volumes:
+      # Persist forecasts.json across rebuilds; shared by both jobs.
+      - energy-data:/app/data
+
+volumes:
+  energy-data:
