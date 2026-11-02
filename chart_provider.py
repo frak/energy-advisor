@@ -43,5 +43,12 @@ class ChartProvider:
         return self._filename
 
     def delete_chart(self) -> None:
+        # Called between retries as well as at the end of a run, so it has to tolerate a chart that
+        # was already removed — raising here would mask whatever actually failed.
         if self._filename:
-            os.remove(self._filename)
+            try:
+                os.remove(self._filename)
+            except FileNotFoundError:
+                pass
+            self._filename = ""
+
